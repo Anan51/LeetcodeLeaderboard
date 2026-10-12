@@ -2,41 +2,54 @@
 
 export default function LeaderboardCard({ user, rank, onRemove }) {
   const stats = user.submitStats?.acSubmissionNum || [];
-  
-  const allStat = stats.find(s => s.difficulty === 'All')?.count || 0;
-  const easyStat = stats.find(s => s.difficulty === 'Easy')?.count || 0;
-  const mediumStat = stats.find(s => s.difficulty === 'Medium')?.count || 0;
-  const hardStat = stats.find(s => s.difficulty === 'Hard')?.count || 0;
+
+  const allStat = stats.find((stat) => stat.difficulty === 'All')?.count || 0;
+  const easyStat = stats.find((stat) => stat.difficulty === 'Easy')?.count || 0;
+  const mediumStat = stats.find((stat) => stat.difficulty === 'Medium')?.count || 0;
+  const hardStat = stats.find((stat) => stat.difficulty === 'Hard')?.count || 0;
 
   const easyPercent = allStat > 0 ? (easyStat / allStat) * 100 : 0;
   const mediumPercent = allStat > 0 ? (mediumStat / allStat) * 100 : 0;
   const hardPercent = allStat > 0 ? (hardStat / allStat) * 100 : 0;
+
+  const neetcode = user.neetcode;
+  const goalMet = neetcode ? neetcode.todayCount >= neetcode.goal : false;
 
   return (
     <div className="leaderboard-card glass-panel animate-fade-in" style={{ animationDelay: `${Math.min(rank, 10) * 0.1}s` }}>
       <div className={`rank-badge rank-${rank}`}>
         #{rank}
       </div>
-      
+
       <div className="user-info">
-        <img 
-          src={user.profile?.userAvatar || 'https://assets.leetcode.com/users/avatar/avatar_150x150.png'} 
+        <img
+          src={user.profile?.userAvatar || 'https://assets.leetcode.com/users/avatar/avatar_150x150.png'}
           alt={`${user.username}'s avatar`}
           className="avatar"
-          onError={(e) => {
-            e.target.src = 'https://assets.leetcode.com/users/avatar/avatar_150x150.png';
+          onError={(event) => {
+            event.target.src = 'https://assets.leetcode.com/users/avatar/avatar_150x150.png';
           }}
         />
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div className="username" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+        <div className="user-copy">
+          <div className="username">
             {user.username}
           </div>
           {user.profile?.realName && (
-            <div className="real-name" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            <div className="real-name">
               {user.profile.realName}
             </div>
           )}
-          
+          {user.githubOwner && user.githubRepo && (
+            <a
+              className="repo-link"
+              href={`https://github.com/${user.githubOwner}/${user.githubRepo}`}
+              target="_blank"
+              rel="noreferrer"
+            >
+              {user.githubOwner}/{user.githubRepo}
+            </a>
+          )}
+
           <div className="progress-bar-container">
             <div className="progress-segment progress-easy" style={{ width: `${easyPercent}%` }}></div>
             <div className="progress-segment progress-medium" style={{ width: `${mediumPercent}%` }}></div>
@@ -62,6 +75,29 @@ export default function LeaderboardCard({ user, rank, onRemove }) {
           <span className="stat-label">Hard</span>
           <span className="stat-value stat-hard">{hardStat}</span>
         </div>
+
+        <div className="streak-divider" aria-hidden="true"></div>
+
+        {neetcode ? (
+          <>
+            <div className="stat-item">
+              <span className="stat-label">Streak</span>
+              <span className="stat-value stat-streak">{neetcode.currentStreak}</span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-label">Longest</span>
+              <span className="stat-value stat-longest">{neetcode.longestStreak}</span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-label">Today</span>
+              <span className={`stat-value ${goalMet ? 'stat-easy' : 'stat-today'}`}>
+                {neetcode.todayCount}/{neetcode.goal}
+              </span>
+            </div>
+          </>
+        ) : (
+          <div className="streak-unavailable">{user.neetcodeError || 'Streak unavailable'}</div>
+        )}
       </div>
 
       <button onClick={() => onRemove(user.username)} className="remove-btn" title="Remove friend">
